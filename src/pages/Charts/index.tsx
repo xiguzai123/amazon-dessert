@@ -49,6 +49,7 @@ const App: React.FC = () => {
             if (!(titles instanceof Array)) return
             console.log(titles)
 
+            const keys = ['近30天销量', '评分数', '近30天销售额($)', '评分']
             worksheet.eachRow({includeEmpty: true}, function (row, rowNumber) {
               // console.log(`Row ${rowNumber} = ${JSON.stringify(row.values)}`);
               if (rowNumber <= 1)
@@ -61,7 +62,7 @@ const App: React.FC = () => {
                   if (!key)
                     return
                   let vv = v
-                  if (key === '近30天销量') {
+                  if (keys.includes(key)) {
                     if (!(typeof vv === 'number')) {
                       vv = 0
                     }
@@ -76,10 +77,17 @@ const App: React.FC = () => {
               } else {
                 data.push(values)
               }
+              data.forEach(d => {
+                keys.forEach(k => {
+                  if (d[k] === undefined){
+                    d[k] = 0
+                  }
+                })
+              })
             });
 
           }).then(() => {
-            // console.log(data)
+            console.log(data)
             // const sortList = [...data]
             let sortBy = lodash.sortBy(data, '近30天销量').reverse();
             sortBy.forEach((v, i) => {

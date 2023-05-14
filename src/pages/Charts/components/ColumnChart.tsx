@@ -72,7 +72,7 @@ const App: React.FC<ColumnProps> = (props) => {
         show: false
       },
       formatter: params => {
-        console.log(params)
+        // console.log(params)
         let data = params[0].data;
         // '评分', 'ASIN', '品牌', '近30天销量', '近30天销售额($)', 'salesRanking', '卖家信息', '评分数', '价格($)', '上架时间', '配送方式'
         const arr = [
@@ -210,7 +210,9 @@ const App: React.FC<ColumnProps> = (props) => {
         <ReactECharts option={option}
                       onChartReady={() => console.log('echarts ready ok')}
                       onEvents={{
-                        'click': () => {
+                        'click': (param, echarts) => {
+                          console.log(param, echarts)
+                          window.open(param.data.data.URL.text, '_blank');
                         }
                       }}/>
       </Modal>

@@ -13,8 +13,6 @@ export type ChartData = {
   productCount?: number
   salesRatio?: number
   salesCount?: number,
-  productCountRatio: number,
-  salesAmtRatio: number,
   list?: any[]
 }
 
@@ -35,35 +33,25 @@ const Chart: React.FC<ChartProps> = ((props) => {
   };
 
   const ranges: Range[] = [
-    {min: 0, max: 9.99},
-    {min: 10, max: 19.99},
-    {min: 20, max: 29.99},
-    {min: 30, max: 39.99},
-    {min: 40, max: 49.99},
-    {min: 50, max: 74.99},
-    {min: 75, max: 99.99},
-    {min: 100, max: 149.99},
-    {min: 150, max: 199.99},
-    {min: 200, max: 299.99},
-    {min: 300,},
+    {min: 0, max: 1.9},
+    {min: 2, max: 2.9},
+    {min: 3, max: 3.9},
+    {min: 4, max: 4.4},
+    {min: 4.5,},
   ]
 
   const datamap = new Map<Range, ChartData>()
   ranges.forEach((i => datamap.set(i, {})))
 
   const metaData = props.data
-  let totalSalesCount = 0
-  let totalProductCount = metaData.length
-  let totalSalesAmt = 0
+  let totalSalesVolume = 0
   metaData.forEach(v => {
     let salesCount = v['近30天销量']
-    totalSalesCount += salesCount
-    let amt = Number(v['近30天销售额($)']);
-    totalSalesAmt += amt
+    totalSalesVolume += salesCount
   })
   metaData.forEach(v => {
     for (let [key, value] of datamap) {
-      let salesCount = v['价格($)']
+      let salesCount = v['评分']
       if (
         (key.min === key.max && key.min == salesCount) ||
         ((key.min !== undefined && key.max !== undefined) && key.min <= salesCount && key.max >= salesCount) ||
@@ -82,22 +70,17 @@ const Chart: React.FC<ChartProps> = ((props) => {
           value.salesRange = salesRatioFormat(key)
         }
         let groupCount = 0
-        let groupAmt = 0
         value.list.forEach(v => {
           let vol = v['近30天销量']
-          let amt = Number(v['近30天销售额($)'])
           groupCount += vol
-          groupAmt += amt
         })
         value['salesCount'] = groupCount
-        value.salesRatio = Number((groupCount / totalSalesCount * 100).toFixed(2))
-        value.productCountRatio = Number((value.productCount / totalProductCount * 100).toFixed(2))
-        value.salesAmtRatio = Number(( groupAmt / totalSalesAmt * 100).toFixed(2))
+        value.salesRatio = Number((groupCount / totalSalesVolume * 100).toFixed(2))
       }
 
     }
   })
-  console.log(`总销量 ${totalSalesCount}`)
+  console.log(`总销量 ${totalSalesVolume}`)
 
   const data = Array.from(datamap.values())
   const [colChartData, setColChartData] = useState({})
@@ -121,11 +104,11 @@ const Chart: React.FC<ChartProps> = ((props) => {
         // brush: { show: true }
       }
     },
-    legend: {data: ['产品数量', '销量占比', '数量占比', '销售额占比']},
+    legend: {data: ['产品数量', '销量占比']},
     dataZoom: [{type: 'inside'}, {type: 'slider'}],
     xAxis: [
       {
-        name: '价格($)',
+        name: '评分数',
         nameLocation: 'start',
         nameGap: 40,
         type: 'category',
@@ -167,27 +150,6 @@ const Chart: React.FC<ChartProps> = ((props) => {
           }
         },
         encode: {x: 'salesRange', y: 'salesRatio'}
-      },
-      {
-        name: '数量占比',
-        type: 'line',
-        yAxisIndex: 1,
-        tooltip: {
-          valueFormatter: function (value1) {
-            return value1 + ' %';
-          }
-        },
-        encode: {x: 'salesRange', y: 'productCountRatio'}
-      },{
-        name: '销售额占比',
-        type: 'line',
-        yAxisIndex: 1,
-        tooltip: {
-          valueFormatter: function (value1) {
-            return value1 + ' %';
-          }
-        },
-        encode: {x: 'salesRange', y: 'salesAmtRatio'}
       }
     ]
   }

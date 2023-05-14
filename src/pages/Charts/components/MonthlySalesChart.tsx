@@ -1,73 +1,175 @@
-//
-// import React, { useState, useEffect } from 'react';
-// import ReactDOM from 'react-dom';
-// import { Column } from '@ant-design/plots';
-//
-// const Chart = () => {
-//   const data = [
-//     {
-//       type: '家具家电',
-//       sales: 38,
-//     },
-//     {
-//       type: '粮油副食',
-//       sales: 52,
-//     },
-//     {
-//       type: '生鲜水果',
-//       sales: 61,
-//     },
-//     {
-//       type: '美容洗护',
-//       sales: 145,
-//     },
-//     {
-//       type: '母婴用品',
-//       sales: 48,
-//     },
-//     {
-//       type: '进口食品',
-//       sales: 38,
-//     },
-//     {
-//       type: '食品饮料',
-//       sales: 38,
-//     },
-//     {
-//       type: '家庭清洁',
-//       sales: 38,
-//     },
-//   ];
-//   const config = {
-//     data,
-//     xField: 'type',
-//     yField: 'sales',
-//     label: {
-//       // 可手动配置 label 数据标签位置
-//       position: 'middle',
-//       // 'top', 'bottom', 'middle',
-//       // 配置样式
-//       style: {
-//         fill: '#FFFFFF',
-//         opacity: 0.6,
-//       },
-//     },
-//     xAxis: {
-//       label: {
-//         autoHide: true,
-//         autoRotate: false,
-//       },
-//     },
-//     meta: {
-//       type: {
-//         alias: '类别',
-//       },
-//       sales: {
-//         alias: '销售额',
-//       },
-//     },
-//   };
-//   return <Column {...config} />;
-// };
-//
-// export default Chart;
+import React, {useState} from 'react';
+import {ChartProps} from './common';
+import ColumnChart from "./ColumnChart";
+import ReactECharts from 'echarts-for-react';
+
+type Range = {
+  min: number
+  max?: number
+}
+
+export type ChartData = {
+  salesRange?: string
+  productCount?: number
+  salesRatio?: number
+  salesCount?: number,
+  list?: any[]
+}
+
+const salesRatioFormat = (r: Range) => {
+  return r.max ? `${r.min}-${r.max}` : `${r.min}+`
+}
+
+const Chart: React.FC<ChartProps> = ((props) => {
+
+  const [isModalOpen, setIsModalOpen] = useState(false);
+
+  const openModal = () => {
+    setIsModalOpen(true);
+  };
+
+  const closeModal = () => {
+    setIsModalOpen(false);
+  };
+
+  const ranges: Range[] = [
+    {min: 0, max: 999},
+    {min: 1000, max: 4999},
+    {min: 5000, max: 9999},
+    {min: 10000, max: 19999},
+    {min: 20000, max: 49999},
+    {min: 50000, max: 99999},
+    {min: 100000}
+  ]
+
+  const datamap = new Map<Range, ChartData>()
+  ranges.forEach((i => datamap.set(i, {})))
+
+  const metaData = props.data
+  let totalSalesVolume = 0
+  metaData.forEach(v => {
+    let salesCount = v['近30天销量']
+    totalSalesVolume += salesCount
+  })
+  metaData.forEach(v => {
+    for (let [key, value] of datamap) {
+      let salesCount = v['近30天销售额($)']
+      if (
+        (key.min === key.max && key.min == salesCount) ||
+        ((key.min !== undefined && key.max !== undefined) && key.min <= salesCount && key.max >= salesCount) ||
+        ((key.min !== undefined && key.max === undefined) && key.min <= salesCount)
+      ) {
+        if (!value.list) {
+          value.list = []
+        }
+        value.list[value.list.length] = v
+        if (!value.productCount) {
+          value.productCount = 0
+        }
+        value.productCount++
+        if (!value.salesRange) {
+          value.salesRange = salesRatioFormat(key)
+        }
+        let groupCount = 0
+        value.list.forEach(v => {
+          let vol = v['近30天销量']
+          groupCount += vol
+        })
+        value['salesCount'] = groupCount
+        value.salesRatio = Number((groupCount / totalSalesVolume * 100).toFixed(2))
+      }
+
+    }
+  })
+  console.log(`总销量 ${totalSalesVolume}`)
+
+  const data = Array.from(datamap.values())
+  const [colChartData, setColChartData] = useState({})
+
+  const option = {
+    tooltip: {
+      trigger: 'axis',
+      axisPointer: {
+        type: 'cross',
+        crossStyle: {
+          color: '#999'
+        }
+      }
+    },
+    toolbox: {
+      feature: {
+        dataView: {show: true, readOnly: false},
+        // magicType: { show: true, type: ['line', 'bar'] },
+        restore: {show: true},
+        saveAsImage: {show: true},
+        // brush: { show: true }
+      }
+    },
+    legend: {data: ['产品数量', '销量占比']},
+    dataZoom: [{type: 'inside'}, {type: 'slider'}],
+    xAxis: [
+      {
+        name: '销售额区间',
+        nameLocation: 'start',
+        nameGap: 40,
+        type: 'category',
+        data: ranges.map(salesRatioFormat),
+      }
+    ],
+    yAxis: [
+      {
+        type: 'value',
+        name: '产品数量',
+      },
+      {
+        type: 'value',
+        name: '销量占比',
+        axisLabel: {
+          formatter: '{value} %'
+        }
+      }
+    ],
+    dataset: {source: data},
+    series: [
+      {
+        name: '产品数量',
+        type: 'bar',
+        tooltip: {
+          valueFormatter: function (value1) {
+            return value1;
+          }
+        },
+        encode: {x: 'salesRange', y: 'productCount'}
+      },
+      {
+        name: '销量占比',
+        type: 'line',
+        yAxisIndex: 1,
+        tooltip: {
+          valueFormatter: function (value1) {
+            return value1 + ' %';
+          }
+        },
+        encode: {x: 'salesRange', y: 'salesRatio'}
+      }
+    ]
+  }
+  const onClick = (param, echarts) => {
+    console.log(param, echarts)
+    setColChartData({...param.value})
+    openModal()
+  }
+  return <>
+    <ReactECharts option={option}
+                  onChartReady={() => console.log('echarts ready ok')}
+                  onEvents={{
+                    'click': onClick
+                  }}/>
+    <ColumnChart title='商品列表' width={1200} open={isModalOpen} onCancel={closeModal} data={colChartData}/>
+  </>
+    ;
+});
+
+
+
+export default Chart;

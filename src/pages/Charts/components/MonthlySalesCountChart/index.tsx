@@ -1,7 +1,7 @@
-import React, {memo, useState} from 'react';
+import React, {useState} from 'react';
 // import {DualAxes} from '@ant-design/plots';
 import {ChartProps} from '../common';
-import ColumnChart from "./components/ColumnChart";
+import ColumnChart from "../ColumnChart";
 import ReactECharts from 'echarts-for-react';
 
 type Range = {
@@ -66,28 +66,30 @@ const Chart: React.FC<ChartProps> = ((props) => {
   metaData.forEach(v => {
     for (let [key, value] of datamap) {
       let salesCount = v['近30天销量']
-      if (!(salesCount >= key.min && (!key.max || salesCount <= key.max))) {
-        continue
+      if (
+        (key.min === key.max && key.min == salesCount) ||
+        ((key.min !== undefined && key.max !== undefined) && key.min <= salesCount && key.max >= salesCount) ||
+        ((key.min !== undefined && key.max === undefined) && key.min >= salesCount)
+      ) {
+        if (!value.list) {
+          value.list = []
+        }
+        value.list[value.list.length] = v
+        if (!value.productCount) {
+          value.productCount = 0
+        }
+        value.productCount++
+        if (!value.salesRange) {
+          value.salesRange = salesRatioFormat(key)
+        }
+        let groupCount = 0
+        value.list.forEach(v => {
+          let vol = v['近30天销量']
+          groupCount += vol
+        })
+        value['salesCount'] = groupCount
+        value.salesRatio = Number((groupCount / totalSalesVolume * 100).toFixed(2))
       }
-
-      if (!value.list) {
-        value.list = []
-      }
-      value.list[value.list.length] = v
-      if (!value.productCount) {
-        value.productCount = 0
-      }
-      value.productCount++
-      if (!value.salesRange) {
-        value.salesRange = salesRatioFormat(key)
-      }
-      let groupCount = 0
-      value.list.forEach(v => {
-        let vol = v['近30天销量']
-        groupCount += vol
-      })
-      value['salesCount'] = groupCount
-      value.salesRatio = Number((groupCount / totalSalesVolume * 100).toFixed(2))
       // if (key.min >= 10000) {
       //   console.log(groupCount)
       //   console.log(totalSalesVolume)
