@@ -153,5 +153,6 @@ export default defineConfig({
   },
   requestRecord: {},
   base: '/amazon-dessert',
-  publicPath: '/amazon-dessert/'
+  publicPath: '/amazon-dessert/',
+  outputPath: 'docs'
 });
