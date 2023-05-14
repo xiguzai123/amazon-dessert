@@ -152,4 +152,6 @@ export default defineConfig({
     strategy: 'normal',
   },
   requestRecord: {},
+  base: '/amazon-dessert',
+  publicPath: '/amazon-dessert/'
 });

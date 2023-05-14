@@ -96,7 +96,7 @@ const App: React.FC = () => {
             setData([...sortBy])
           });
         })
-        message.success('到入成功')
+        message.success('导入成功')
       } else {
         message.error('导入失败')
       }
