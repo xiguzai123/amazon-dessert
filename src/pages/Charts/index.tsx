@@ -65,8 +65,11 @@ const App: React.FC = () => {
                     if (!(typeof vv === 'number')) {
                       vv = 0
                     }
+                  } else if (key === '上架时间') {
+                    let t = Date.parse(v);
+                    item['timestamp'] = t
                   }
-                  item[key] = vv
+                  item[key] = vv;
                 })
                 // console.log(item)
                 data.push(item)

@@ -53,7 +53,7 @@ export default [
   },
   {
     path: '/',
-    redirect: '/welcome',
+    redirect: '/charts',
   },
   {
     path: '*',
