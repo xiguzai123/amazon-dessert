@@ -3,6 +3,7 @@ import React, {useState} from 'react';
 import {ChartProps} from '../common';
 import ColumnChart from "../ColumnChart";
 import ReactECharts from 'echarts-for-react';
+import {Modal} from "antd";
 
 type Range = {
   min: number
@@ -129,7 +130,7 @@ const Chart: React.FC<ChartProps> = ((props) => {
     }
   };*/
 
-  const [colChartData, setColChartData] = useState({})
+  const [colChartData, setColChartData] = useState(new Array<any>())
 
   const option = {
     tooltip: {
@@ -211,7 +212,7 @@ const Chart: React.FC<ChartProps> = ((props) => {
   }
   const onClick = (param, echarts) => {
     console.log(param, echarts)
-    setColChartData({...param.value})
+    setColChartData(param.value.list)
     openModal()
   }
   return <>
@@ -229,7 +230,12 @@ const Chart: React.FC<ChartProps> = ((props) => {
                   onEvents={{
                     'click': onClick
                   }}/>
-    <ColumnChart title='商品列表' width={1200} open={isModalOpen} onCancel={closeModal} data={colChartData}/>
+    <Modal footer={null} maskClosable={false}
+           title='商品列表' width={1200} open={isModalOpen} onCancel={closeModal}
+           afterOpenChange={(open) => {
+           }}>
+      <ColumnChart data={colChartData}/>
+    </Modal>
   </>
     ;
 });

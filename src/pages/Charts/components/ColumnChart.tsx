@@ -1,11 +1,18 @@
 import React, {useState} from 'react';
-import {Modal, ModalProps, Radio} from 'antd';
-import {ChartData} from "@/pages/Charts/components/MonthlySalesCountChart";
+import {Radio} from 'antd';
 import ReactECharts from "echarts-for-react";
+import lodash from 'lodash';
 
 export type ColumnProps = {
-  data: ChartData
-} & ModalProps
+  data: any[],
+  countKey: string,
+  rankKey: string,
+  option: {
+    title: string,
+    xAxisName: string,
+    yAxisItemNames: string[],
+  }
+}
 
 type ColumnChartData = {
   salesRanking?: number
@@ -15,24 +22,22 @@ type ColumnChartData = {
   data?: any
 }
 
-let fistOpen = false
-
 const App: React.FC<ColumnProps> = (props) => {
   // let data = props.data;
-  const chartData = new Array<ColumnChartData>()
+  let chartData = new Array<ColumnChartData>()
   let [option, setOption] = useState({});
   let [et, setEt] = useState(31104000000);
-  if (props.data && props.data.list) {
+  if (props.data) {
     let totalCount = 0
-    let rankarr = new Array<any>()
-    props.data.list.forEach(v => {
-      let count = v['近30天销量'];
+    // let rankarr = new Array<any>()
+    props.data.forEach(v => {
+      let count = v[props.countKey];
       totalCount += count
-      rankarr[rankarr.length] = count
+      // rankarr[rankarr.length] = count
     });
-    props.data.list.forEach(v => {
-      let count = v['近30天销量'];
-      let ranking = v['salesRanking'];
+    props.data.forEach(v => {
+      let count = v[props.countKey];
+      let ranking = v[props.rankKey];
       // const d = {...v}
       const d: ColumnChartData = {}
       d.salesRanking = ranking
@@ -49,6 +54,7 @@ const App: React.FC<ColumnProps> = (props) => {
       // console.log(d);
     })
   }
+  chartData = lodash.sortBy(chartData, 'salesRanking')
   option = {
     toolbox: {
       feature: {
@@ -102,14 +108,14 @@ const App: React.FC<ColumnProps> = (props) => {
         //   //   color: 'red'
         //   // }
         // },
-        '销量占比'
+        props.option.yAxisItemNames[1]
       ],
       selectedMode: false
     },
     dataZoom: [{type: 'inside'}, {type: 'slider'}],
     xAxis: [
       {
-        name: '销量排名',
+        name: props.option.xAxisName,
         nameLocation: 'start',
         nameGap: 40,
         type: 'category',
@@ -118,11 +124,11 @@ const App: React.FC<ColumnProps> = (props) => {
     yAxis: [
       {
         type: 'value',
-        name: '销量',
+        name: props.option.yAxisItemNames[0],
       },
       {
         type: 'value',
-        name: '销量占比',
+        name: props.option.yAxisItemNames[1],
         axisLabel: {
           formatter: '{value} %'
         }
@@ -133,8 +139,8 @@ const App: React.FC<ColumnProps> = (props) => {
       type: "piecewise",
       show: true,
       pieces: [
-        {min: 0, max: 0, color: '#556fc5', label: '销量'},
-        {min: 1, max: 1, color: '#91cd77', label: '新品销量'},
+        {min: 0, max: 0, color: '#556fc5', label: props.option.yAxisItemNames[0]},
+        {min: 1, max: 1, color: '#91cd77', label: `新品${props.option.yAxisItemNames[0]}`},
       ],
       // inRange: [
       //
@@ -155,7 +161,7 @@ const App: React.FC<ColumnProps> = (props) => {
     },
     series: [
       {
-        name: '销量',
+        name: props.option.yAxisItemNames[0],
         type: 'bar',
         encode: {x: 'salesRanking', y: 'salesCount'},
       },
@@ -165,7 +171,7 @@ const App: React.FC<ColumnProps> = (props) => {
       //   encode: {x: 'salesRanking', y: 'salesCount'}
       // },
       {
-        name: '销量占比',
+        name: props.option.yAxisItemNames[1],
         type: 'line',
         yAxisIndex: 1,
         tooltip: {
@@ -178,44 +184,37 @@ const App: React.FC<ColumnProps> = (props) => {
 
   return (
     <>
-      <Modal {...props} footer={null} maskClosable={false} afterOpenChange={(open) => {
-        if (open && !fistOpen) {
-          fistOpen = true
-          setOption({...option})
-        }
-      }}>
-        <div style={{overflow: "hidden", padding: "0 0 10px 0"}}>
-          <div style={{float: "right", clear: "both"}}>
-            <span>新品定义：</span>
-            <Radio.Group size='small' defaultValue={et} onChange={e => {
-              const t = e.target.value
-              let nowt = Date.now();
-              option.dataset.source.forEach(c => {
-                if (nowt <= c.timestamp + Number(t)) {
-                  c.newProduct = 1
-                } else {
-                  c.newProduct = 0
-                }
-              })
-              // setChartData([...chartData])
-              setEt(Number(t))
-              setOption({...option})
-            }}>
-              <Radio.Button value={31104000000}>最近1年</Radio.Button>
-              <Radio.Button value={15552000000}>最近6个月</Radio.Button>
-              <Radio.Button value={7776000000}>最近3个月</Radio.Button>
-            </Radio.Group>
-          </div>
+      <div style={{overflow: "hidden", padding: "0 0 10px 0"}}>
+        <div style={{float: "right", clear: "both"}}>
+          <span>新品定义：</span>
+          <Radio.Group size='small' defaultValue={et} onChange={e => {
+            const t = e.target.value
+            let nowt = Date.now();
+            option.dataset.source.forEach(c => {
+              if (nowt <= c.timestamp + Number(t)) {
+                c.newProduct = 1
+              } else {
+                c.newProduct = 0
+              }
+            })
+            // setChartData([...chartData])
+            setEt(Number(t))
+            setOption({...option})
+          }}>
+            <Radio.Button value={31104000000}>最近1年</Radio.Button>
+            <Radio.Button value={15552000000}>最近6个月</Radio.Button>
+            <Radio.Button value={7776000000}>最近3个月</Radio.Button>
+          </Radio.Group>
         </div>
-        <ReactECharts option={option}
-                      onChartReady={() => console.log('echarts ready ok')}
-                      onEvents={{
-                        'click': (param, echarts) => {
-                          console.log(param, echarts)
-                          window.open(param.data.data.URL.text, '_blank');
-                        }
-                      }}/>
-      </Modal>
+      </div>
+      <ReactECharts option={option}
+                    // onChartReady={() => console.log('echarts ready ok')}
+                    onEvents={{
+                      'click': (param, echarts) => {
+                        console.log(param, echarts)
+                        window.open(param.data.data.URL.text, '_blank');
+                      }
+                    }}/>
     </>
   );
 };

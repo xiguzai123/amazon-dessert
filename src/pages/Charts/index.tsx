@@ -61,16 +61,18 @@ const App: React.FC = () => {
                   const key = titles[i]
                   if (!key)
                     return
-                  let vv = v
+                  let cv = v
                   if (keys.includes(key)) {
-                    if (!(typeof vv === 'number')) {
-                      vv = 0
+                    if (!(typeof cv === 'number')) {
+                      cv = 0
                     }
                   } else if (key === '上架时间') {
                     let t = Date.parse(v);
                     item['timestamp'] = t
+                  } else if (key === '卖家所属地' && !v) {
+                    cv = '未知'
                   }
-                  item[key] = vv;
+                  item[key] = cv;
                 })
                 // console.log(item)
                 data.push(item)
@@ -93,7 +95,11 @@ const App: React.FC = () => {
             sortBy.forEach((v, i) => {
               v['salesRanking'] = i + 1
             })
-            setData([...sortBy])
+            let sortBy2 = lodash.sortBy(data, '近30天销售额($)').reverse();
+            sortBy2.forEach((v, i) => {
+              v['salesAmtRanking'] = i + 1
+            })
+            setData([...data])
           });
         })
         message.success('导入成功')

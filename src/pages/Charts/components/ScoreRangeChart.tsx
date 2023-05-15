@@ -1,20 +1,8 @@
 import React, {useState} from 'react';
-import {ChartProps} from './common';
+import {ChartData, ChartProps, Range, salesCountColumnChartProps} from './common';
 import ColumnChart from "./ColumnChart";
 import ReactECharts from 'echarts-for-react';
-
-type Range = {
-  min: number
-  max?: number
-}
-
-export type ChartData = {
-  salesRange?: string
-  productCount?: number
-  salesRatio?: number
-  salesCount?: number,
-  list?: any[]
-}
+import {Modal} from "antd";
 
 const salesRatioFormat = (r: Range) => {
   return r.max ? `${r.min}-${r.max}` : `${r.min}+`
@@ -83,7 +71,7 @@ const Chart: React.FC<ChartProps> = ((props) => {
   console.log(`总销量 ${totalSalesVolume}`)
 
   const data = Array.from(datamap.values())
-  const [colChartData, setColChartData] = useState({})
+  const [colChartData, setColChartData] = useState(new Array<any>())
 
   const option = {
     tooltip: {
@@ -155,8 +143,13 @@ const Chart: React.FC<ChartProps> = ((props) => {
   }
   const onClick = (param, echarts) => {
     console.log(param, echarts)
-    setColChartData({...param.value})
+    setColChartData(param.value.list)
     openModal()
+  }
+
+  const colprops = {
+    ...salesCountColumnChartProps(),
+    data: colChartData
   }
   return <>
     <ReactECharts option={option}
@@ -164,7 +157,12 @@ const Chart: React.FC<ChartProps> = ((props) => {
                   onEvents={{
                     'click': onClick
                   }}/>
-    <ColumnChart title='商品列表' width={1200} open={isModalOpen} onCancel={closeModal} data={colChartData}/>
+    <Modal footer={null} maskClosable={false}
+           title='商品列表' width={1200} open={isModalOpen} onCancel={closeModal}
+           afterOpenChange={(open) => {
+           }}>
+      <ColumnChart {...colprops}/>
+    </Modal>
   </>
     ;
 });
