@@ -1,11 +1,11 @@
 import React, {useState} from 'react';
 import {InboxOutlined} from '@ant-design/icons';
-import type {UploadProps} from 'antd';
-import {message, Upload} from 'antd';
-import DataView from './components/DataView';
+import {Button, TabsProps, UploadProps} from 'antd';
+import {message, Tabs, Upload} from 'antd';
 import ExcelJS from 'exceljs';
-// import {useModel} from 'umi';
 import lodash from 'lodash';
+import Table from './components/Table';
+import Charts from './components/Charts';
 
 const {Dragger} = Upload;
 
@@ -108,9 +108,33 @@ const App: React.FC = () => {
       }
     }
   };
+
+  const onChange = (key: string) => {
+    console.log(key);
+  };
+
+  const items: TabsProps['items'] = [
+    {
+      key: 'table',
+      label: `表格`,
+      children: <Table />,
+    },
+    {
+      key: 'charts',
+      label: `图表`,
+      children: <Charts data={data} />,
+    },
+  ];
+
   return (
     imported ?
-      <DataView data={data}/> :
+      <div>
+        <Button type="primary" onClick={() => {
+          setImported(false)
+          setData([])
+        }}>重新导入</Button>
+        <Tabs defaultActiveKey="1" items={items} onChange={onChange} />
+      </div> :
       <Dragger {...props}>
         <p className="ant-upload-drag-icon">
           <InboxOutlined/>

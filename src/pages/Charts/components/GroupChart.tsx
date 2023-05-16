@@ -100,7 +100,7 @@ const makeColumnData = (key: string, value:GroupChartData, v, groupKey: string, 
   v['newProduct'] = nowt <= v.timestamp + Number(expireMill) ? 1 : 0
   value.data = v
 }
-const countGroupData = (value: GroupChartData, totalSalesCount, totalSalesAmt, i) => {
+const countGroupData = (value: GroupChartData, totalSalesCount, totalSalesAmt) => {
   value.salesCount = 0
   value.salesAmt = 0
   // value.ranking = i + 1
@@ -136,8 +136,6 @@ const countGroupData = (value: GroupChartData, totalSalesCount, totalSalesAmt, i
   value.salesAmtRatio = Number((value.salesAmt / totalSalesAmt * 100).toFixed(2))
 }
 
-let groupKeys;
-
 const Chart: React.FC<GroupChartProps> = ((props) => {
 
   let [expireMill, setExpireMill] = useState(31104000000);
@@ -170,9 +168,7 @@ const Chart: React.FC<GroupChartProps> = ((props) => {
     v['newProduct'] = nowt <= v.timestamp + expireMill ? 1 : 0
   })
 
-  if (!groupKeys) {
-    groupKeys = new Set(metadata.map(v => v[props.groupKey]))
-  }
+  const groupKeys = new Set(metadata.map(v => v[props.groupKey]))
   const groupmap = new Map<string, ChartData>()
   groupKeys.forEach(key => groupmap.set(key, {}))
 
@@ -185,7 +181,7 @@ const Chart: React.FC<GroupChartProps> = ((props) => {
 
   let datasource = Array.from(groupmap.values())
   datasource.map((value, i) => {
-    countGroupData(value, totalSalesCount, totalSalesAmt, i)
+    countGroupData(value, totalSalesCount, totalSalesAmt)
   })
   datasource = lodash.sortBy(datasource, props.sortKey).reverse();
   datasource.forEach((it, i) => it.ranking = i + 1)
@@ -211,9 +207,13 @@ const Chart: React.FC<GroupChartProps> = ((props) => {
             c.list.forEach(b => {
               if (nowt <= b.timestamp + Number(t)) {
                 np = 1
+                b.newProduct = 1
+              } else {
+                b.newProduct = 0
               }
             })
             c.newProduct = np
+            countGroupData(c, totalSalesCount, totalSalesAmt)
           })
           // setChartData([...chartData])
           setExpireMill(Number(t))

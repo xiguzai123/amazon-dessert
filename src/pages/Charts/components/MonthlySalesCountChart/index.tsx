@@ -1,6 +1,6 @@
 import React, {useState} from 'react';
 // import {DualAxes} from '@ant-design/plots';
-import {ChartProps} from '../common';
+import {ChartProps, salesCountColumnChartProps} from '../common';
 import ColumnChart from "../ColumnChart";
 import ReactECharts from 'echarts-for-react';
 import {Modal} from "antd";
@@ -215,6 +215,10 @@ const Chart: React.FC<ChartProps> = ((props) => {
     setColChartData(param.value.list)
     openModal()
   }
+  const colprops = {
+    ...salesCountColumnChartProps(),
+    data: colChartData
+  }
   return <>
     {/*<DualAxes onReady={p => {
       p.on('interval:click', (...args) => {
@@ -234,7 +238,7 @@ const Chart: React.FC<ChartProps> = ((props) => {
            title='商品列表' width={1200} open={isModalOpen} onCancel={closeModal}
            afterOpenChange={(open) => {
            }}>
-      <ColumnChart data={colChartData}/>
+      <ColumnChart {...colprops}/>
     </Modal>
   </>
     ;

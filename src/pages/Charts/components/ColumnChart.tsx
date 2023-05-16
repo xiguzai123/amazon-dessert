@@ -94,6 +94,7 @@ const App: React.FC<ColumnProps> = (props) => {
           `<b>价格($): </b><span>${data.data['价格($)']}</span>`,
           `<b>上架时间: </b><span>${data.data['上架时间']}</span>`,
           `<b>配送方式: </b><span>${data.data['配送方式']}</span>`,
+          `<image src="${data.data['商品主图'].text}" width="100"/>`
         ]
         return arr.join('<br/>')
       },
