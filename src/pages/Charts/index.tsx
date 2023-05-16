@@ -6,8 +6,48 @@ import ExcelJS from 'exceljs';
 import lodash from 'lodash';
 import Table from './components/Table';
 import Charts from './components/Charts';
+import { MjjlData, MjjlRow } from '@/common/type';
 
 const {Dragger} = Upload;
+
+const readMjjlData = (file: File, sheet: string | number | undefined) : void => {
+  file.arrayBuffer().then(buffer => {
+    const workbook = new ExcelJS.Workbook();
+    workbook.xlsx.load(buffer).then(() => {
+
+      const worksheet = sheet !== undefined ? workbook.getWorksheet('US') : workbook.getWorksheet(1);
+      if (worksheet.rowCount <= 1) return
+
+      const titles = worksheet.getRow(1).values
+      if (!(titles instanceof Array) && titles.length === 0) return null
+
+      const mjjlData = new MjjlData()
+      mjjlData.columns = titles
+      mjjlData.columns.forEach((v, i) => {
+        mjjlData.indexColumns.set(i, v)
+      })
+
+      worksheet.eachRow({includeEmpty: true}, function (row, rowNumber) {
+        if (rowNumber <= 1) return
+        const s = {}
+        row.values.forEach((v, i) => {
+          const column = mjjlData.indexColumns.get(i)
+          if (!column)
+            return
+          s[column] = v
+        })
+        mjjlData.source.push(s)
+        const mjjlRow = new MjjlRow()
+        lodash.assignWith(mjjlRow, s, (v1, v2) => {
+          return (typeof v1) === (typeof v2) ? v2 : v1
+        })
+        mjjlData.data.push(mjjlRow)
+      })
+
+      console.log(mjjlData)
+    })
+  })
+}
 
 const App: React.FC = () => {
   const [imported, setImported] = useState(false)
@@ -34,6 +74,7 @@ const App: React.FC = () => {
     },
     customRequest(options) {
       const {file} = options
+      readMjjlData(file, 'US')
       // console.log(options)
       // console.log(file)
       if (file instanceof File) {
