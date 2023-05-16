@@ -231,6 +231,7 @@ const Chart: React.FC<GroupChartProps> = ((props) => {
                     'click': onClick
                   }}/>
     <Modal footer={null} maskClosable={false}
+           centered = {true}
            title='商品列表' width={1200} open={isModalOpen} onCancel={closeModal}
            afterOpenChange={(open) => {
            }}>
