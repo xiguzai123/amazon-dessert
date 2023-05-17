@@ -10,18 +10,17 @@ import { MjjlData, MjjlRow } from '@/common/type';
 
 const {Dragger} = Upload;
 
-const readMjjlData = (file: File, sheet: string | number | undefined) : void => {
-  file.arrayBuffer().then(buffer => {
+const readMjjlData = async (file: File, sheet?: string | number): Promise<any> => {
+  return file.arrayBuffer().then(buffer => {
     const workbook = new ExcelJS.Workbook();
-    workbook.xlsx.load(buffer).then(() => {
-
+    return workbook.xlsx.load(buffer).then(() => {
       const worksheet = sheet !== undefined ? workbook.getWorksheet('US') : workbook.getWorksheet(1);
-      if (worksheet.rowCount <= 1) return
+      if (worksheet.rowCount <= 1) return null
 
+      const mjjlData = new MjjlData()
       const titles = worksheet.getRow(1).values
       if (!(titles instanceof Array) && titles.length === 0) return null
 
-      const mjjlData = new MjjlData()
       mjjlData.columns = titles
       mjjlData.columns.forEach((v, i) => {
         mjjlData.indexColumns.set(i, v)
@@ -44,14 +43,17 @@ const readMjjlData = (file: File, sheet: string | number | undefined) : void => 
         mjjlData.data.push(mjjlRow)
       })
 
-      console.log(mjjlData)
+      // console.log(mjjlData)
+      return mjjlData
     })
+
   })
 }
 
 const App: React.FC = () => {
   const [imported, setImported] = useState(false)
   const [ data, setData ] = useState(new Array<any>());
+  const [ mjjlData, setMjjlData ] = useState(new MjjlData);
   // let {data, setData, imported, setImported} = useModel('chartsModel');
   const props: UploadProps = {
     name: 'file',
@@ -74,10 +76,16 @@ const App: React.FC = () => {
     },
     customRequest(options) {
       const {file} = options
-      readMjjlData(file, 'US')
+
       // console.log(options)
       // console.log(file)
       if (file instanceof File) {
+
+        readMjjlData(file).then(data => {
+          setMjjlData(data)
+          console.log(data)
+        })
+
         setImported(true)
         const workbook = new ExcelJS.Workbook();
 
@@ -158,7 +166,7 @@ const App: React.FC = () => {
     {
       key: 'table',
       label: `表格`,
-      children: <Table />,
+      children: <Table  data={mjjlData}/>,
     },
     {
       key: 'charts',
