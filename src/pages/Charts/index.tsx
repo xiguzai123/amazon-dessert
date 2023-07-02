@@ -54,6 +54,7 @@ const App: React.FC = () => {
   const [imported, setImported] = useState(false)
   const [ data, setData ] = useState(new Array<any>());
   const [ mjjlData, setMjjlData ] = useState(new MjjlData);
+  const [ filename, setFilename ] = useState('');
   // let {data, setData, imported, setImported} = useModel('chartsModel');
   const props: UploadProps = {
     name: 'file',
@@ -81,6 +82,8 @@ const App: React.FC = () => {
       // console.log(file)
       if (file instanceof File) {
 
+        setFilename(file.name)
+
         readMjjlData(file).then(data => {
           setMjjlData(data)
           console.log(data)
@@ -91,7 +94,7 @@ const App: React.FC = () => {
 
         file.arrayBuffer().then(buffer => {
           workbook.xlsx.load(buffer).then(() => {
-            const worksheet = workbook.getWorksheet('US');
+            const worksheet = workbook.getWorksheet(1);
 
             // console.log(`ColCount ${worksheet.actualColumnCount}`)
             const titles = worksheet.getRow(1).values
@@ -182,6 +185,7 @@ const App: React.FC = () => {
           setImported(false)
           setData([])
         }}>重新导入</Button>
+        <h1>{filename}</h1>
         <Tabs defaultActiveKey="1" items={items} onChange={onChange} />
       </div> :
       <Dragger {...props}>
